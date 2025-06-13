@@ -195,6 +195,60 @@ def load_buko_file(uploaded_file) -> List[str]:
     lines = content.splitlines()
     return lines
 
+def extract_existing_configurations(lines: List[str]) -> dict:
+    """
+    Extract all existing BEC1 and BEC2 configurations from BUKO file.
+    Returns dictionary with BE_TYPE as key and list of (BEC1, BEC2) tuples as values.
+    """
+    configurations = {}
+    
+    for line_num, line in enumerate(lines, 1):
+        if len(line.strip()) > 60:  # Ensure line has enough content
+            try:
+                # Extract BE_TYPE (first 20 chars), BEC1 (next 20 chars), BEC2 (next 20 chars)
+                be_type = line[0:20].strip()
+                bec1 = line[20:40].strip()
+                bec2 = line[40:60].strip()
+                
+                if be_type and bec1 and bec2:
+                    if be_type not in configurations:
+                        configurations[be_type] = []
+                    
+                    config_tuple = (bec1, bec2, line_num)
+                    if config_tuple not in configurations[be_type]:
+                        configurations[be_type].append(config_tuple)
+            except IndexError:
+                continue  # Skip malformed lines
+    
+    return configurations
+
+def search_configurations(configurations: dict, search_term: Optional[str] = None) -> dict:
+    """
+    Search configurations by BE_TYPE, BEC1, or BEC2.
+    If search_term is None or empty, returns all configurations.
+    """
+    if not search_term or search_term.strip() == "":
+        return configurations
+    
+    search_term = search_term.upper().strip()
+    filtered_configs = {}
+    
+    for be_type, configs in configurations.items():
+        # Check if BE_TYPE matches
+        if search_term in be_type.upper():
+            filtered_configs[be_type] = configs
+        else:
+            # Check if any BEC1 or BEC2 matches
+            matching_configs = []
+            for bec1, bec2, line_num in configs:
+                if search_term in bec1.upper() or search_term in bec2.upper():
+                    matching_configs.append((bec1, bec2, line_num))
+            
+            if matching_configs:
+                filtered_configs[be_type] = matching_configs
+    
+    return filtered_configs
+
 def main():
     st.set_page_config(
         page_title="GL Batch Abend Process",
@@ -205,8 +259,93 @@ def main():
     st.title("⚙️ GL Batch Abend Process")
     st.markdown("Process error messages and update BUKO configuration files")
     
-    # Create two columns for inputs
-    col1, col2 = st.columns(2)
+    # Create tabs for different functionalities
+    tab1, tab2 = st.tabs(["🔄 Process Error Message", "🔍 View Existing Configurations"])
+    
+    with tab2:
+        st.subheader("📋 Existing BUKO Configurations")
+        st.markdown("Upload a BUKO file to view all existing BEC1 and BEC2 configurations")
+        
+        # File upload for configuration viewing
+        config_file = st.file_uploader(
+            "Upload BUKO file to view configurations:",
+            type=['txt'],
+            key="config_viewer",
+            help="Upload the BUKO file to analyze existing configurations"
+        )
+        
+        if config_file:
+            try:
+                # Load and analyze the file
+                config_lines = load_buko_file(config_file)
+                configurations = extract_existing_configurations(config_lines)
+                
+                if configurations:
+                    st.success(f"✅ Found {sum(len(configs) for configs in configurations.values())} unique configurations across {len(configurations)} BE_TYPE categories")
+                    
+                    # Search functionality
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        search_term = st.text_input(
+                            "🔎 Search configurations (BE_TYPE, BEC1, or BEC2):",
+                            placeholder="Enter search term (e.g., 'PREMIUM', 'ERROR', 'CLAIM')",
+                            help="Search by any part of BE_TYPE, BEC1, or BEC2 fields"
+                        )
+                    with col2:
+                        show_all = st.button("Show All", type="secondary")
+                    
+                    # Apply search filter
+                    if search_term or show_all:
+                        filtered_configs = search_configurations(configurations, None if show_all else search_term)
+                        
+                        if filtered_configs:
+                            # Display configurations in organized format
+                            for be_type, configs in filtered_configs.items():
+                                with st.expander(f"📂 {be_type} ({len(configs)} configurations)", expanded=len(filtered_configs) <= 3):
+                                    # Create a table for better visualization
+                                    config_data = []
+                                    for bec1, bec2, line_num in configs:
+                                        config_data.append({
+                                            "BEC1": bec1,
+                                            "BEC2": bec2,
+                                            "Line #": line_num
+                                        })
+                                    
+                                    if config_data:
+                                        df = pd.DataFrame(config_data)
+                                        st.dataframe(df, use_container_width=True, hide_index=True)
+                        else:
+                            st.warning(f"❌ No configurations found matching '{search_term}'")
+                    
+                    # Summary statistics
+                    with st.expander("📊 Configuration Summary"):
+                        col1, col2, col3 = st.columns(3)
+                        
+                        with col1:
+                            st.metric("Total BE_TYPE Categories", len(configurations))
+                        
+                        with col2:
+                            total_configs = sum(len(configs) for configs in configurations.values())
+                            st.metric("Total Configurations", total_configs)
+                        
+                        with col3:
+                            avg_configs = total_configs / len(configurations) if configurations else 0
+                            st.metric("Average per Category", f"{avg_configs:.1f}")
+                        
+                        # Show BE_TYPE distribution
+                        st.markdown("**Configurations per BE_TYPE:**")
+                        for be_type, configs in sorted(configurations.items()):
+                            st.write(f"• **{be_type}**: {len(configs)} configurations")
+                
+                else:
+                    st.warning("⚠️ No valid configurations found in the uploaded file")
+                    
+            except Exception as e:
+                st.error(f"❌ Error analyzing file: {str(e)}")
+    
+    with tab1:
+        # Create two columns for inputs
+        col1, col2 = st.columns(2)
     
     with col1:
         st.subheader("📝 Error Message Input")
