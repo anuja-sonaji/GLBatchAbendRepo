@@ -279,6 +279,18 @@ def search_configurations(configurations: List[dict], search_term: Optional[str]
     
     return filtered_configs
 
+def apply_advanced_filters(configurations: List[dict], filters: dict) -> List[dict]:
+    """
+    Apply multiple filter criteria to configurations.
+    """
+    filtered_configs = configurations.copy()
+    
+    for field, value in filters.items():
+        if value and value != "All":
+            filtered_configs = [config for config in filtered_configs if config.get(field, '') == value]
+    
+    return filtered_configs
+
 def main():
     st.set_page_config(
         page_title="GL Batch Abend Process",
@@ -313,23 +325,146 @@ def main():
                 if configurations:
                     st.success(f"✅ Found {len(configurations)} configurations in the BUKO file")
                     
-                    # Search functionality
-                    col1, col2 = st.columns([3, 1])
+                    # Enhanced search functionality
+                    st.markdown("### 🔍 Search & Filter Options")
+                    
+                    # Create search columns
+                    col1, col2, col3 = st.columns([2, 1, 1])
+                    
                     with col1:
                         search_term = st.text_input(
                             "🔎 Search configurations (any field):",
                             placeholder="Enter search term (e.g., 'PREMIUM', 'ERROR', 'CLAIM', 'BUBASIS')",
                             help="Search by any field value including BE_TYPE, BEC1, BEC2, SOURCE, LART, etc."
                         )
-                    with col2:
-                        show_all = st.button("Show All", type="secondary")
                     
-                    # Apply search filter
-                    if search_term or show_all:
-                        filtered_configs = search_configurations(configurations, None if show_all else search_term)
+                    with col2:
+                        # Filter by BE_TYPE
+                        be_types = sorted(set(config['BE_TYPE'] for config in configurations))
+                        selected_be_type = st.selectbox(
+                            "Filter by BE_TYPE:",
+                            options=["All"] + be_types,
+                            index=0
+                        )
+                    
+                    with col3:
+                        # Filter by SOURCE
+                        sources = sorted(set(config['SOURCE'] for config in configurations if config['SOURCE']))
+                        selected_source = st.selectbox(
+                            "Filter by SOURCE:",
+                            options=["All"] + sources,
+                            index=0
+                        )
+                    
+                    # Additional filter row
+                    col4, col5, col6 = st.columns([1, 1, 2])
+                    
+                    with col4:
+                        # Filter by KONTOBEZ_SOLL
+                        kontobez_soll_values = sorted(set(config['KONTOBEZ_SOLL'] for config in configurations if config['KONTOBEZ_SOLL'].strip()))
+                        selected_kontobez_soll = st.selectbox(
+                            "Filter by KONTOBEZ_SOLL:",
+                            options=["All"] + kontobez_soll_values,
+                            index=0
+                        )
+                    
+                    with col5:
+                        # Filter by KONTOBEZ_HABEN
+                        kontobez_haben_values = sorted(set(config['KONTOBEZ_HABEN'] for config in configurations if config['KONTOBEZ_HABEN'].strip()))
+                        selected_kontobez_haben = st.selectbox(
+                            "Filter by KONTOBEZ_HABEN:",
+                            options=["All"] + kontobez_haben_values,
+                            index=0
+                        )
+                    
+                    with col6:
+                        # Action buttons
+                        col_btn1, col_btn2, col_btn3 = st.columns(3)
+                        with col_btn1:
+                            show_all = st.button("Show All", type="secondary")
+                        with col_btn2:
+                            clear_filters = st.button("Clear Filters", type="secondary")
+                        with col_btn3:
+                            apply_filters = st.button("Apply Filters", type="primary")
+                    
+                    # Apply search and filters
+                    if search_term or show_all or apply_filters or selected_be_type != "All" or selected_source != "All" or selected_kontobez_soll != "All" or selected_kontobez_haben != "All":
+                        if clear_filters:
+                            # Reset session state for filters
+                            if 'filter_reset' not in st.session_state:
+                                st.session_state.filter_reset = True
+                                st.rerun()
+                        
+                        # Apply filters
+                        filtered_configs = configurations.copy()
+                        
+                        # Apply text search
+                        if search_term and not show_all:
+                            filtered_configs = search_configurations(filtered_configs, search_term)
+                        
+                        # Apply BE_TYPE filter
+                        if selected_be_type != "All":
+                            filtered_configs = [config for config in filtered_configs if config['BE_TYPE'] == selected_be_type]
+                        
+                        # Apply SOURCE filter
+                        if selected_source != "All":
+                            filtered_configs = [config for config in filtered_configs if config['SOURCE'] == selected_source]
+                        
+                        # Apply KONTOBEZ_SOLL filter
+                        if selected_kontobez_soll != "All":
+                            filtered_configs = [config for config in filtered_configs if config['KONTOBEZ_SOLL'] == selected_kontobez_soll]
+                        
+                        # Apply KONTOBEZ_HABEN filter
+                        if selected_kontobez_haben != "All":
+                            filtered_configs = [config for config in filtered_configs if config['KONTOBEZ_HABEN'] == selected_kontobez_haben]
                         
                         if filtered_configs:
-                            st.info(f"Displaying {len(filtered_configs)} configurations")
+                            # Display results count and export options
+                            col_result1, col_result2, col_result3 = st.columns([2, 1, 1])
+                            
+                            with col_result1:
+                                st.info(f"📊 Displaying {len(filtered_configs)} of {len(configurations)} configurations")
+                            
+                            with col_result2:
+                                # Export filtered results as CSV
+                                if len(filtered_configs) > 0:
+                                    config_data_export = []
+                                    for config in filtered_configs:
+                                        config_data_export.append({
+                                            "Line #": config['Line_Number'],
+                                            "BE_TYPE": config['BE_TYPE'],
+                                            "BEC1": config['BEC1'],
+                                            "BEC2": config['BEC2'],
+                                            "BK": config['BK'],
+                                            "KONTOBEZ_SOLL": config['KONTOBEZ_SOLL'],
+                                            "KONTOBEZ_HABEN": config['KONTOBEZ_HABEN'],
+                                            "BUCHART": config['BUCHART'],
+                                            "BETRAGSART": config['BETRAGSART'],
+                                            "FORDART": config['FORDART'],
+                                            "ZAHLART": config['ZAHLART'],
+                                            "GG_KONTOBEZ_SOLL": config['GG_KONTOBEZ_SOLL'],
+                                            "GG_KONTOBEZ_HABEN": config['GG_KONTOBEZ_HABEN'],
+                                            "BBZBETRART": config['BBZBETRART'],
+                                            "KZVORRUECK": config['KZVORRUECK'],
+                                            "FLREVERSED": config['FLREVERSED'],
+                                            "LART": config['LART'],
+                                            "SOURCE": config['SOURCE']
+                                        })
+                                    
+                                    df_export = pd.DataFrame(config_data_export)
+                                    csv_data = df_export.to_csv(index=False)
+                                    
+                                    st.download_button(
+                                        label="📄 Export CSV",
+                                        data=csv_data,
+                                        file_name="buko_configurations_filtered.csv",
+                                        mime="text/csv",
+                                        type="secondary"
+                                    )
+                            
+                            with col_result3:
+                                # Quick filter toggle
+                                show_details = st.checkbox("Show Details", value=True)
                             
                             # Create a comprehensive table for all fields
                             config_data = []
