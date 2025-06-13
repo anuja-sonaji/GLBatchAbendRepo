@@ -197,26 +197,62 @@ def load_buko_file(uploaded_file) -> List[str]:
 
 def extract_existing_configurations(lines: List[str]) -> dict:
     """
-    Extract all existing BEC1 and BEC2 configurations from BUKO file.
-    Returns dictionary with BE_TYPE as key and list of (BEC1, BEC2) tuples as values.
+    Extract all existing configurations from BUKO file with all field information.
+    Returns dictionary with BE_TYPE as key and list of configuration dictionaries as values.
     """
     configurations = {}
     
     for line_num, line in enumerate(lines, 1):
         if len(line.strip()) > 60:  # Ensure line has enough content
             try:
-                # Extract BE_TYPE (first 20 chars), BEC1 (next 20 chars), BEC2 (next 20 chars)
+                # Extract all fields based on the format specification
                 be_type = line[0:20].strip()
                 bec1 = line[20:40].strip()
                 bec2 = line[40:60].strip()
+                bk = line[60:64].strip()
+                kontobez_soll = line[64:65] if len(line) > 64 else ' '
+                kontobez_haben = line[65:66] if len(line) > 65 else ' '
+                buchart = line[66:68].strip() if len(line) > 66 else ''
+                betragsart = line[68:70].strip() if len(line) > 68 else ''
+                fordart = line[70:72].strip() if len(line) > 70 else ''
+                zahlart = line[72:74].strip() if len(line) > 72 else ''
+                gg_kontobez_soll = line[74:75] if len(line) > 74 else ' '
+                gg_kontobez_haben = line[75:76] if len(line) > 75 else ' '
+                bbzbetrart = line[76:78].strip() if len(line) > 76 else ''
+                kzvorrueck = line[78:79] if len(line) > 78 else ' '
+                flreversed = line[79:80] if len(line) > 79 else ' '
+                lart = line[80:87].strip() if len(line) > 80 else ''
+                source = line[87:97].strip() if len(line) > 87 else ''
                 
                 if be_type and bec1 and bec2:
                     if be_type not in configurations:
                         configurations[be_type] = []
                     
-                    config_tuple = (bec1, bec2, line_num)
-                    if config_tuple not in configurations[be_type]:
-                        configurations[be_type].append(config_tuple)
+                    config_dict = {
+                        'BEC1': bec1,
+                        'BEC2': bec2,
+                        'BK': bk,
+                        'KONTOBEZ_SOLL': kontobez_soll,
+                        'KONTOBEZ_HABEN': kontobez_haben,
+                        'BUCHART': buchart,
+                        'BETRAGSART': betragsart,
+                        'FORDART': fordart,
+                        'ZAHLART': zahlart,
+                        'GG_KONTOBEZ_SOLL': gg_kontobez_soll,
+                        'GG_KONTOBEZ_HABEN': gg_kontobez_haben,
+                        'BBZBETRART': bbzbetrart,
+                        'KZVORRUECK': kzvorrueck,
+                        'FLREVERSED': flreversed,
+                        'LART': lart,
+                        'SOURCE': source,
+                        'Line_Number': line_num,
+                        'Full_Line': line
+                    }
+                    
+                    # Check for duplicates based on all fields
+                    if config_dict not in configurations[be_type]:
+                        configurations[be_type].append(config_dict)
+                        
             except IndexError:
                 continue  # Skip malformed lines
     
@@ -224,7 +260,7 @@ def extract_existing_configurations(lines: List[str]) -> dict:
 
 def search_configurations(configurations: dict, search_term: Optional[str] = None) -> dict:
     """
-    Search configurations by BE_TYPE, BEC1, or BEC2.
+    Search configurations by any field value.
     If search_term is None or empty, returns all configurations.
     """
     if not search_term or search_term.strip() == "":
@@ -238,11 +274,19 @@ def search_configurations(configurations: dict, search_term: Optional[str] = Non
         if search_term in be_type.upper():
             filtered_configs[be_type] = configs
         else:
-            # Check if any BEC1 or BEC2 matches
+            # Check if any field in the configuration matches
             matching_configs = []
-            for bec1, bec2, line_num in configs:
-                if search_term in bec1.upper() or search_term in bec2.upper():
-                    matching_configs.append((bec1, bec2, line_num))
+            for config in configs:
+                # Search through all string fields
+                searchable_fields = ['BEC1', 'BEC2', 'BK', 'KONTOBEZ_SOLL', 'KONTOBEZ_HABEN', 
+                                   'BUCHART', 'BETRAGSART', 'FORDART', 'ZAHLART', 
+                                   'GG_KONTOBEZ_SOLL', 'GG_KONTOBEZ_HABEN', 'BBZBETRART',
+                                   'KZVORRUECK', 'FLREVERSED', 'LART', 'SOURCE']
+                
+                for field in searchable_fields:
+                    if search_term in str(config.get(field, '')).upper():
+                        matching_configs.append(config)
+                        break  # Avoid duplicates
             
             if matching_configs:
                 filtered_configs[be_type] = matching_configs
@@ -287,9 +331,9 @@ def main():
                     col1, col2 = st.columns([3, 1])
                     with col1:
                         search_term = st.text_input(
-                            "🔎 Search configurations (BE_TYPE, BEC1, or BEC2):",
-                            placeholder="Enter search term (e.g., 'PREMIUM', 'ERROR', 'CLAIM')",
-                            help="Search by any part of BE_TYPE, BEC1, or BEC2 fields"
+                            "🔎 Search configurations (any field):",
+                            placeholder="Enter search term (e.g., 'PREMIUM', 'ERROR', 'CLAIM', 'BUBASIS')",
+                            help="Search by any field value including BE_TYPE, BEC1, BEC2, SOURCE, LART, etc."
                         )
                     with col2:
                         show_all = st.button("Show All", type="secondary")
@@ -302,18 +346,38 @@ def main():
                             # Display configurations in organized format
                             for be_type, configs in filtered_configs.items():
                                 with st.expander(f"📂 {be_type} ({len(configs)} configurations)", expanded=len(filtered_configs) <= 3):
-                                    # Create a table for better visualization
+                                    # Create a comprehensive table for all fields
                                     config_data = []
-                                    for bec1, bec2, line_num in configs:
+                                    for config in configs:
                                         config_data.append({
-                                            "BEC1": bec1,
-                                            "BEC2": bec2,
-                                            "Line #": line_num
+                                            "Line #": config['Line_Number'],
+                                            "BEC1": config['BEC1'],
+                                            "BEC2": config['BEC2'],
+                                            "BK": config['BK'],
+                                            "KONTOBEZ_SOLL": config['KONTOBEZ_SOLL'],
+                                            "KONTOBEZ_HABEN": config['KONTOBEZ_HABEN'],
+                                            "BUCHART": config['BUCHART'],
+                                            "BETRAGSART": config['BETRAGSART'],
+                                            "FORDART": config['FORDART'],
+                                            "ZAHLART": config['ZAHLART'],
+                                            "GG_KONTOBEZ_SOLL": config['GG_KONTOBEZ_SOLL'],
+                                            "GG_KONTOBEZ_HABEN": config['GG_KONTOBEZ_HABEN'],
+                                            "BBZBETRART": config['BBZBETRART'],
+                                            "KZVORRUECK": config['KZVORRUECK'],
+                                            "FLREVERSED": config['FLREVERSED'],
+                                            "LART": config['LART'],
+                                            "SOURCE": config['SOURCE']
                                         })
                                     
                                     if config_data:
                                         df = pd.DataFrame(config_data)
                                         st.dataframe(df, use_container_width=True, hide_index=True)
+                                        
+                                        # Option to view full formatted lines
+                                        if st.checkbox(f"Show full formatted lines for {be_type}", key=f"show_full_{be_type}"):
+                                            st.subheader(f"Full Formatted Lines - {be_type}")
+                                            for i, config in enumerate(configs):
+                                                st.text(f"Line {config['Line_Number']}: {config['Full_Line']}")
                         else:
                             st.warning(f"❌ No configurations found matching '{search_term}'")
                     
