@@ -637,76 +637,135 @@ def main():
     if 'processing_results' in st.session_state:
         results = st.session_state.processing_results
         
-        # Display results
-        st.subheader("📊 Processing Results")
+        # Display results with professional styling
+        st.markdown("---")
+        st.markdown("## 📊 Processing Results")
         
-        # Show parsed fields
-        with st.expander("🔍 Parsed Fields", expanded=True):
-            col1, col2, col3 = st.columns(3)
+        # Success message with metrics
+        col_success1, col_success2 = st.columns([3, 1])
+        with col_success1:
+            st.success(f"✅ Processing completed successfully - Entry added at row {results['new_row_number']}")
+        with col_success2:
+            st.metric("New Row", results['new_row_number'])
+        
+        # Show parsed fields in a professional layout
+        with st.container():
+            st.markdown("### 🔍 Parsed Field Details")
             
-            with col1:
-                st.write("**Determined Values:**")
-                st.write(f"BE_TYPE: `{results['be_type']}`")
-                st.write(f"BEC1: `{results['bec1']}`")
-                st.write(f"BEC2: `{results['bec2']}`")
-                st.write("")
-                st.write("**Core Fields:**")
-                st.write(f"BK: `{results['fields']['BK']}`")
-                st.write(f"KONTOBEZ_SOLL: `{results['fields']['KONTOBEZ_SOLL']}`")
-                st.write(f"KONTOBEZ_HABEN: `{results['fields']['KONTOBEZ_HABEN']}`")
-                st.write(f"BUCHART: `{results['fields']['BUCHART']}`")
-                st.write(f"BETRAGSART: `{results['fields']['BETRAGSART']}`")
+            # Create tabs for better organization
+            tab1, tab2, tab3 = st.tabs(["🎯 Determined Values", "📋 Core Fields", "🔧 Additional Fields"])
             
-            with col2:
-                st.write("**Additional Core Fields:**")
-                st.write(f"FORDART: `{results['fields']['FORDART']}`")
-                st.write(f"ZAHLART: `{results['fields']['ZAHLART']}`")
-                st.write(f"GG_KONTOBEZ_SOLL: `{results['fields']['GG_KONTOBEZ_SOLL']}`")
-                st.write(f"GG_KONTOBEZ_HABEN: `{results['fields']['GG_KONTOBEZ_HABEN']}`")
-                st.write(f"BBZBETRART: `{results['fields']['BBZBETRART']}`")
-                st.write(f"KZVORRUECK: `{results['fields']['KZVORRUECK']}`")
-                st.write(f"FLREVERSED: `{results['fields']['FLREVERSED']}`")
+            with tab1:
+                st.markdown("**Business Logic Results:**")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.info(f"**BE_TYPE**\n\n`{results['be_type']}`")
+                with col2:
+                    st.info(f"**BEC1**\n\n`{results['bec1']}`")
+                with col3:
+                    st.info(f"**BEC2**\n\n`{results['bec2']}`")
             
-            with col3:
-                st.write("**Other Fields:**")
-                st.write(f"LART: `{results['fields']['LART']}`")
-                st.write(f"SOURCE: `{results['fields']['SOURCE']}`")
+            with tab2:
+                st.markdown("**Primary Configuration Fields:**")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.markdown(f"""
+                    **BK:** `{results['fields']['BK']}`  
+                    **KONTOBEZ_SOLL:** `{results['fields']['KONTOBEZ_SOLL']}`  
+                    **KONTOBEZ_HABEN:** `{results['fields']['KONTOBEZ_HABEN']}`  
+                    **BUCHART:** `{results['fields']['BUCHART']}`  
+                    **BETRAGSART:** `{results['fields']['BETRAGSART']}`
+                    """)
+                with col2:
+                    st.markdown(f"""
+                    **FORDART:** `{results['fields']['FORDART']}`  
+                    **ZAHLART:** `{results['fields']['ZAHLART']}`  
+                    **GG_KONTOBEZ_SOLL:** `{results['fields']['GG_KONTOBEZ_SOLL']}`  
+                    **GG_KONTOBEZ_HABEN:** `{results['fields']['GG_KONTOBEZ_HABEN']}`  
+                    **BBZBETRART:** `{results['fields']['BBZBETRART']}`
+                    """)
+                with col3:
+                    st.markdown(f"""
+                    **KZVORRUECK:** `{results['fields']['KZVORRUECK']}`  
+                    **FLREVERSED:** `{results['fields']['FLREVERSED']}`  
+                    **LART:** `{results['fields']['LART']}`  
+                    **SOURCE:** `{results['fields']['SOURCE']}`
+                    """)
+            
+            with tab3:
+                st.markdown("**Complete Field Summary:**")
+                # Create a clean data table
+                field_data = {
+                    'Field Name': ['BE_TYPE', 'BEC1', 'BEC2', 'BK', 'KONTOBEZ_SOLL', 'KONTOBEZ_HABEN', 
+                                  'BUCHART', 'BETRAGSART', 'FORDART', 'ZAHLART', 'GG_KONTOBEZ_SOLL', 
+                                  'GG_KONTOBEZ_HABEN', 'BBZBETRART', 'KZVORRUECK', 'FLREVERSED', 'LART', 'SOURCE'],
+                    'Value': [results['be_type'], results['bec1'], results['bec2'], results['fields']['BK'],
+                             results['fields']['KONTOBEZ_SOLL'], results['fields']['KONTOBEZ_HABEN'],
+                             results['fields']['BUCHART'], results['fields']['BETRAGSART'], results['fields']['FORDART'],
+                             results['fields']['ZAHLART'], results['fields']['GG_KONTOBEZ_SOLL'], 
+                             results['fields']['GG_KONTOBEZ_HABEN'], results['fields']['BBZBETRART'],
+                             results['fields']['KZVORRUECK'], results['fields']['FLREVERSED'], 
+                             results['fields']['LART'], results['fields']['SOURCE']]
+                }
+                df_fields = pd.DataFrame(field_data)
+                st.dataframe(df_fields, use_container_width=True, hide_index=True)
         
-        # Show formatted output
-        st.subheader("📄 Formatted Output")
-        st.code(results['formatted_line'], language="text")
+        # Show formatted output in a professional container
+        st.markdown("### 📄 Formatted Output Line")
+        with st.container():
+            st.markdown("**Generated BUKO Configuration Entry:**")
+            st.code(results['formatted_line'], language="text")
+            
+            # Download section with better layout
+            st.markdown("### 📥 Download Updated File")
+            col_download1, col_download2 = st.columns([2, 1])
+            
+            with col_download1:
+                st.download_button(
+                    label="📥 Download Updated BUKO File",
+                    data=results['updated_content'],
+                    file_name="AI_Agent_BUKO_Updated.txt",
+                    mime="text/plain",
+                    type="primary",
+                    use_container_width=True
+                )
+            
+            with col_download2:
+                st.metric("File Size", f"{len(results['updated_content'])} chars")
         
-        st.success(f"✅ New entry added at row {results['new_row_number']}")
-        
-        # Download button
-        st.download_button(
-            label="📥 Download Updated BUKO File",
-            data=results['updated_content'],
-            file_name="AI_Agent_BUKO_Updated.txt",
-            mime="text/plain",
-            type="primary"
-        )
-        
-        # Show warning message
-        st.warning("""
-        ⚠️ **Important Note:**
+        # Show warning message in a professional container
+        st.markdown("### ⚠️ Important Information")
+        st.info("""
+        **File Version Notice:**  
         This may not be the latest version of the BUKO file. Please ensure that you have the most recent version. 
         You can copy the newly added entry into your latest BUKO file and rerun the GL.
         """)
         
-        # Show preview of updated file
-        with st.expander("👀 Preview Updated File (Last 10 entries)"):
+        # Show preview of updated file in a collapsible section
+        with st.expander("👀 Preview Updated File (Last 10 entries)", expanded=False):
+            st.markdown("**File Preview:**")
             preview_lines = results['updated_lines'][-10:]
+            
+            # Create a clean preview with better formatting
             for i, line in enumerate(preview_lines, len(results['updated_lines']) - 9):
                 if i == results['new_row_number']:
-                    st.success(f"Row {i}: {line}")
+                    st.success(f"**Row {i} (NEW):** {line}")
                 else:
                     st.text(f"Row {i}: {line}")
         
-        # Clear results button
-        if st.button("🧹 Clear Results", type="secondary"):
-            del st.session_state.processing_results
-            st.rerun()
+        # Action buttons section
+        st.markdown("### 🔧 Actions")
+        col_action1, col_action2 = st.columns(2)
+        
+        with col_action1:
+            if st.button("🧹 Clear Results & Start New", type="secondary", use_container_width=True):
+                del st.session_state.processing_results
+                st.session_state.error_message = ""
+                st.rerun()
+        
+        with col_action2:
+            # Show a summary metric
+            st.metric("Total Entries", len(results['updated_lines']))
     
     # Help section
     with st.expander("❓ Help & Format Information"):
