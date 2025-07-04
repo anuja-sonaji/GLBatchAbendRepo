@@ -649,8 +649,7 @@ def main():
                 st.write(f"BE_TYPE: `{results['be_type']}`")
                 st.write(f"BEC1: `{results['bec1']}`")
                 st.write(f"BEC2: `{results['bec2']}`")
-            
-            with col2:
+                st.write("")
                 st.write("**Core Fields:**")
                 st.write(f"BK: `{results['fields']['BK']}`")
                 st.write(f"KONTOBEZ_SOLL: `{results['fields']['KONTOBEZ_SOLL']}`")
@@ -658,8 +657,18 @@ def main():
                 st.write(f"BUCHART: `{results['fields']['BUCHART']}`")
                 st.write(f"BETRAGSART: `{results['fields']['BETRAGSART']}`")
             
+            with col2:
+                st.write("**Additional Core Fields:**")
+                st.write(f"FORDART: `{results['fields']['FORDART']}`")
+                st.write(f"ZAHLART: `{results['fields']['ZAHLART']}`")
+                st.write(f"GG_KONTOBEZ_SOLL: `{results['fields']['GG_KONTOBEZ_SOLL']}`")
+                st.write(f"GG_KONTOBEZ_HABEN: `{results['fields']['GG_KONTOBEZ_HABEN']}`")
+                st.write(f"BBZBETRART: `{results['fields']['BBZBETRART']}`")
+                st.write(f"KZVORRUECK: `{results['fields']['KZVORRUECK']}`")
+                st.write(f"FLREVERSED: `{results['fields']['FLREVERSED']}`")
+            
             with col3:
-                st.write("**Additional Fields:**")
+                st.write("**Other Fields:**")
                 st.write(f"LART: `{results['fields']['LART']}`")
                 st.write(f"SOURCE: `{results['fields']['SOURCE']}`")
         
@@ -695,16 +704,9 @@ def main():
                     st.text(f"Row {i}: {line}")
         
         # Clear results button
-        col_clear1, col_clear2 = st.columns(2)
-        with col_clear1:
-            if st.button("🧹 Clear Results", type="secondary"):
-                del st.session_state.processing_results
-                st.rerun()
-        
-        with col_clear2:
-            if st.button("🗑️ Clear Error Message", type="secondary"):
-                st.session_state.error_message = ""
-                st.rerun()
+        if st.button("🧹 Clear Results", type="secondary"):
+            del st.session_state.processing_results
+            st.rerun()
     
     # Help section
     with st.expander("❓ Help & Format Information"):
