@@ -599,73 +599,96 @@ def main():
             # Format output line
             formatted_line = format_output_line(be_type, bec1, bec2, fields)
             
-            # Display results
-            st.subheader("📊 Processing Results")
-            
-            # Show parsed fields
-            with st.expander("🔍 Parsed Fields", expanded=True):
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    st.write("**Determined Values:**")
-                    st.write(f"BE_TYPE: `{be_type}`")
-                    st.write(f"BEC1: `{bec1}`")
-                    st.write(f"BEC2: `{bec2}`")
-                
-                with col2:
-                    st.write("**Core Fields:**")
-                    st.write(f"BK: `{fields['BK']}`")
-                    st.write(f"KONTOBEZ_SOLL: `{fields['KONTOBEZ_SOLL']}`")
-                    st.write(f"KONTOBEZ_HABEN: `{fields['KONTOBEZ_HABEN']}`")
-                    st.write(f"BUCHART: `{fields['BUCHART']}`")
-                    st.write(f"BETRAGSART: `{fields['BETRAGSART']}`")
-                
-                with col3:
-                    st.write("**Additional Fields:**")
-                    st.write(f"LART: `{fields['LART']}`")
-                    st.write(f"SOURCE: `{fields['SOURCE']}`")
-            
-            # Show formatted output
-            st.subheader("📄 Formatted Output")
-            st.code(formatted_line, language="text")
-            
             # Add to BUKO file
             updated_lines = existing_lines + [formatted_line]
             new_row_number = len(updated_lines)
             
-            st.success(f"✅ New entry added at row {new_row_number}")
-            
             # Create download file
             updated_content = '\n'.join(updated_lines)
             
-            st.download_button(
-                label="📥 Download Updated BUKO File",
-                data=updated_content,
-                file_name="AI_Agent_BUKO_Updated.txt",
-                mime="text/plain",
-                type="primary"
-            )
-            
-            # Show warning message
-            st.warning("""
-            ⚠️ **Important Note:**
-            This may not be the latest version of the BUKO file. Please ensure that you have the most recent version. 
-            You can copy the newly added entry into your latest BUKO file and rerun the GL.
-            """)
-            
-            # Show preview of updated file
-            with st.expander("👀 Preview Updated File (Last 10 entries)"):
-                preview_lines = updated_lines[-10:]
-                for i, line in enumerate(preview_lines, len(updated_lines) - 9):
-                    if i == new_row_number:
-                        st.success(f"Row {i}: {line}")
-                    else:
-                        st.text(f"Row {i}: {line}")
+            # Store processing results in session state
+            st.session_state.processing_results = {
+                'be_type': be_type,
+                'bec1': bec1,
+                'bec2': bec2,
+                'fields': fields,
+                'formatted_line': formatted_line,
+                'new_row_number': new_row_number,
+                'updated_content': updated_content,
+                'updated_lines': updated_lines,
+                'duplicate_rows': duplicate_rows
+            }
             
         except ValueError as e:
             st.error(f"❌ Error parsing message: {str(e)}")
         except Exception as e:
             st.error(f"❌ Unexpected error: {str(e)}")
+    
+    # Display processing results if they exist in session state
+    if 'processing_results' in st.session_state:
+        results = st.session_state.processing_results
+        
+        # Display results
+        st.subheader("📊 Processing Results")
+        
+        # Show parsed fields
+        with st.expander("🔍 Parsed Fields", expanded=True):
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.write("**Determined Values:**")
+                st.write(f"BE_TYPE: `{results['be_type']}`")
+                st.write(f"BEC1: `{results['bec1']}`")
+                st.write(f"BEC2: `{results['bec2']}`")
+            
+            with col2:
+                st.write("**Core Fields:**")
+                st.write(f"BK: `{results['fields']['BK']}`")
+                st.write(f"KONTOBEZ_SOLL: `{results['fields']['KONTOBEZ_SOLL']}`")
+                st.write(f"KONTOBEZ_HABEN: `{results['fields']['KONTOBEZ_HABEN']}`")
+                st.write(f"BUCHART: `{results['fields']['BUCHART']}`")
+                st.write(f"BETRAGSART: `{results['fields']['BETRAGSART']}`")
+            
+            with col3:
+                st.write("**Additional Fields:**")
+                st.write(f"LART: `{results['fields']['LART']}`")
+                st.write(f"SOURCE: `{results['fields']['SOURCE']}`")
+        
+        # Show formatted output
+        st.subheader("📄 Formatted Output")
+        st.code(results['formatted_line'], language="text")
+        
+        st.success(f"✅ New entry added at row {results['new_row_number']}")
+        
+        # Download button
+        st.download_button(
+            label="📥 Download Updated BUKO File",
+            data=results['updated_content'],
+            file_name="AI_Agent_BUKO_Updated.txt",
+            mime="text/plain",
+            type="primary"
+        )
+        
+        # Show warning message
+        st.warning("""
+        ⚠️ **Important Note:**
+        This may not be the latest version of the BUKO file. Please ensure that you have the most recent version. 
+        You can copy the newly added entry into your latest BUKO file and rerun the GL.
+        """)
+        
+        # Show preview of updated file
+        with st.expander("👀 Preview Updated File (Last 10 entries)"):
+            preview_lines = results['updated_lines'][-10:]
+            for i, line in enumerate(preview_lines, len(results['updated_lines']) - 9):
+                if i == results['new_row_number']:
+                    st.success(f"Row {i}: {line}")
+                else:
+                    st.text(f"Row {i}: {line}")
+        
+        # Clear results button
+        if st.button("🧹 Clear Results", type="secondary"):
+            del st.session_state.processing_results
+            st.rerun()
     
     # Help section
     with st.expander("❓ Help & Format Information"):
