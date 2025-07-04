@@ -539,12 +539,21 @@ def main():
     
     with col1:
         st.subheader("📝 Error Message Input")
+        
+        # Initialize error message in session state if not present
+        if 'error_message' not in st.session_state:
+            st.session_state.error_message = ""
+        
         error_message = st.text_area(
             "Enter the error message:",
+            value=st.session_state.error_message,
             height=100,
             placeholder="Example: 01BC/S/ /UM/E /  /UM/ /K/  / / /AM34   /LEIAUFGL",
             help="Enter the error message in the format: BK/KONTOBEZ_SOLL/KONTOBEZ_HABEN/BUCHART/BETRAGSART/FORDART/ZAHLART/GG_KONTOBEZ_SOLL/GG_KONTOBEZ_HABEN/BBZBETRART/KZVORRUECK/FLREVERSED/LART/SOURCE"
         )
+        
+        # Update session state with current error message
+        st.session_state.error_message = error_message
     
     with col2:
         st.subheader("📁 BUKO File Upload")
@@ -686,9 +695,16 @@ def main():
                     st.text(f"Row {i}: {line}")
         
         # Clear results button
-        if st.button("🧹 Clear Results", type="secondary"):
-            del st.session_state.processing_results
-            st.rerun()
+        col_clear1, col_clear2 = st.columns(2)
+        with col_clear1:
+            if st.button("🧹 Clear Results", type="secondary"):
+                del st.session_state.processing_results
+                st.rerun()
+        
+        with col_clear2:
+            if st.button("🗑️ Clear Error Message", type="secondary"):
+                st.session_state.error_message = ""
+                st.rerun()
     
     # Help section
     with st.expander("❓ Help & Format Information"):
