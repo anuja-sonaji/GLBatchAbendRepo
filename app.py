@@ -12,12 +12,31 @@ def parse_error_message(error_msg: str) -> dict:
     # Remove leading/trailing whitespace
     error_msg = error_msg.strip()
     
+    # Check if the message is empty
+    if not error_msg:
+        raise ValueError("Error message cannot be empty")
+    
     # Split by '/' but handle the fact that some fields might be empty
     # The pattern should match the structure: BK/KONTOBEZ_SOLL/KONTOBEZ_HABEN/BUCHART/BETRAGSART/FORDART/ZAHLART/GG_KONTOBEZ_SOLL/GG_KONTOBEZ_HABEN/BBZBETRART/KZVORRUECK/FLREVERSED/LART/SOURCE
     parts = error_msg.split('/')
     
     if len(parts) < 13:
-        raise ValueError(f"Invalid error message format. Expected at least 13 parts separated by '/', got {len(parts)}")
+        # Provide more detailed error information
+        sample_format = "01BC/S/ /UM/E /  /UM/ /K/  / / /AM34   /LEIAUFGL"
+        current_parts = f"'{error_msg}'" if len(error_msg) < 100 else f"'{error_msg[:100]}...'"
+        raise ValueError(f"""Invalid error message format. 
+
+Expected format: {sample_format}
+
+Your input: {current_parts}
+Parts found: {len(parts)} (need at least 13)
+
+Please ensure your error message:
+1. Contains forward slashes (/) as field separators
+2. Has at least 13 fields separated by '/'
+3. Follows the pattern: BK/KONTOBEZ_SOLL/KONTOBEZ_HABEN/BUCHART/BETRAGSART/FORDART/ZAHLART/GG_KONTOBEZ_SOLL/GG_KONTOBEZ_HABEN/BBZBETRART/KZVORRUECK/FLREVERSED/LART/SOURCE
+
+If some fields are empty, leave them blank but keep the slashes (e.g., 'field1//field3' for empty middle field).""")
     
     # Map the parts to field names
     fields = {
@@ -544,16 +563,31 @@ def main():
         if 'error_message' not in st.session_state:
             st.session_state.error_message = ""
         
+        # Add sample message button
+        col_input1, col_input2 = st.columns([3, 1])
+        with col_input2:
+            if st.button("📋 Use Sample", type="secondary", use_container_width=True):
+                st.session_state.error_message = "01BC/S/ /UM/E /  /UM/ /K/  / / /AM34   /LEIAUFGL"
+                st.rerun()
+        
         error_message = st.text_area(
             "Enter the error message:",
             value=st.session_state.error_message,
             height=100,
             placeholder="Example: 01BC/S/ /UM/E /  /UM/ /K/  / / /AM34   /LEIAUFGL",
-            help="Enter the error message in the format: BK/KONTOBEZ_SOLL/KONTOBEZ_HABEN/BUCHART/BETRAGSART/FORDART/ZAHLART/GG_KONTOBEZ_SOLL/GG_KONTOBEZ_HABEN/BBZBETRART/KZVORRUECK/FLREVERSED/LART/SOURCE"
+            help="Enter the error message with fields separated by forward slashes (/). Must contain at least 13 fields in the format: BK/KONTOBEZ_SOLL/KONTOBEZ_HABEN/BUCHART/BETRAGSART/FORDART/ZAHLART/GG_KONTOBEZ_SOLL/GG_KONTOBEZ_HABEN/BBZBETRART/KZVORRUECK/FLREVERSED/LART/SOURCE"
         )
         
         # Update session state with current error message
         st.session_state.error_message = error_message
+        
+        # Add format validation helper
+        if error_message.strip():
+            parts_count = len(error_message.split('/'))
+            if parts_count < 13:
+                st.error(f"⚠️ Format check: Found {parts_count} fields, need at least 13. Make sure to use forward slashes (/) as separators.")
+            else:
+                st.success(f"✅ Format check: Found {parts_count} fields (minimum 13 required)")
     
     with col2:
         st.subheader("📁 BUKO File Upload")
