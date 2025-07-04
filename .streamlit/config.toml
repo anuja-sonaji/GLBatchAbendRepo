@@ -1,5 +1,4 @@
-# This is a comment
 [server]
 headless = true
-# address = "0.0.0.0"  # This line is commented out
-# port = 5000           # This line is also commented out
+address = "0.0.0.0"
+port = 5000
