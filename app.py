@@ -553,121 +553,123 @@ def main():
                 st.error(f"❌ Error analyzing file: {str(e)}")
     
     with tab1:
+        st.subheader("📝 Error Message Processing")
+        
         # Create two columns for inputs
         col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📝 Error Message Input")
         
-        # Initialize error message in session state if not present
-        if 'error_message' not in st.session_state:
-            st.session_state.error_message = ""
-        
-        # Add sample message button
-        col_input1, col_input2 = st.columns([3, 1])
-        with col_input2:
-            if st.button("📋 Use Sample", type="secondary", use_container_width=True):
-                st.session_state.error_message = "01BC/S/ /UM/E /  /UM/ /K/  / / /AM34   /LEIAUFGL"
-                st.rerun()
-        
-        error_message = st.text_area(
-            "Enter the error message:",
-            value=st.session_state.error_message,
-            height=100,
-            placeholder="Example: 01BC/S/ /UM/E /  /UM/ /K/  / / /AM34   /LEIAUFGL",
-            help="Enter the error message with fields separated by forward slashes (/). Must contain at least 13 fields in the format: BK/KONTOBEZ_SOLL/KONTOBEZ_HABEN/BUCHART/BETRAGSART/FORDART/ZAHLART/GG_KONTOBEZ_SOLL/GG_KONTOBEZ_HABEN/BBZBETRART/KZVORRUECK/FLREVERSED/LART/SOURCE"
-        )
-        
-        # Update session state with current error message
-        st.session_state.error_message = error_message
-        
-        # Add format validation helper
-        if error_message.strip():
-            parts_count = len(error_message.split('/'))
-            if parts_count < 13:
-                st.error(f"⚠️ Format check: Found {parts_count} fields, need at least 13. Make sure to use forward slashes (/) as separators.")
-            else:
-                st.success(f"✅ Format check: Found {parts_count} fields (minimum 13 required)")
-    
-    with col2:
-        st.subheader("📁 BUKO File Upload")
-        uploaded_file = st.file_uploader(
-            "Upload AI_AgentBuko.txt file:",
-            type=['txt'],
-            help="Upload the existing BUKO configuration file that will be updated"
-        )
-    
-    # Process button
-    if st.button("🔄 Process Error Message", type="primary"):
-        if not error_message.strip():
-            st.error("❌ Please enter an error message")
-            return
-        
-        if not uploaded_file:
-            st.error("❌ Please upload the BUKO file")
-            return
-        
-        try:
-            # Load existing BUKO file
-            existing_lines = load_buko_file(uploaded_file)
-            st.success(f"✅ Loaded BUKO file with {len(existing_lines)} existing entries")
+        with col1:
+            st.markdown("**Error Message Input**")
             
-            # Parse error message
-            with st.spinner("Parsing error message..."):
-                fields = parse_error_message(error_message)
+            # Initialize error message in session state if not present
+            if 'error_message' not in st.session_state:
+                st.session_state.error_message = ""
             
-            # Validate field lengths
-            validation_errors = validate_field_lengths(fields)
-            if validation_errors:
-                st.error("❌ Validation Errors:")
-                for error in validation_errors:
-                    st.error(f"• {error}")
-                return
+            # Add sample message button
+            col_input1, col_input2 = st.columns([3, 1])
+            with col_input2:
+                if st.button("📋 Use Sample", type="secondary", use_container_width=True):
+                    st.session_state.error_message = "01BC/S/ /UM/E /  /UM/ /K/  / / /AM34   /LEIAUFGL"
+                    st.rerun()
             
-            # Determine BE_TYPE, BEC1, BEC2
-            be_type, bec1, bec2 = determine_be_fields(
-                fields['KONTOBEZ_SOLL'], 
-                fields['KONTOBEZ_HABEN']
+            error_message = st.text_area(
+                "Enter the error message:",
+                value=st.session_state.error_message,
+                height=100,
+                placeholder="Example: 01BC/S/ /UM/E /  /UM/ /K/  / / /AM34   /LEIAUFGL",
+                help="Enter the error message with fields separated by forward slashes (/). Must contain at least 13 fields in the format: BK/KONTOBEZ_SOLL/KONTOBEZ_HABEN/BUCHART/BETRAGSART/FORDART/ZAHLART/GG_KONTOBEZ_SOLL/GG_KONTOBEZ_HABEN/BBZBETRART/KZVORRUECK/FLREVERSED/LART/SOURCE"
             )
             
-            # Check for duplicates
-            duplicate_rows = check_duplicates(fields, existing_lines)
-            if duplicate_rows:
-                st.warning(f"⚠️ Duplicate entries found at row(s): {', '.join(map(str, duplicate_rows))}")
-                st.warning("The configuration may already exist in the BUKO file.")
+            # Update session state with current error message
+            st.session_state.error_message = error_message
+            
+            # Add format validation helper
+            if error_message.strip():
+                parts_count = len(error_message.split('/'))
+                if parts_count < 13:
+                    st.error(f"⚠️ Format check: Found {parts_count} fields, need at least 13. Make sure to use forward slashes (/) as separators.")
+                else:
+                    st.success(f"✅ Format check: Found {parts_count} fields (minimum 13 required)")
+        
+        with col2:
+            st.markdown("**BUKO File Upload**")
+            uploaded_file = st.file_uploader(
+                "Upload AI_AgentBuko.txt file:",
+                type=['txt'],
+                help="Upload the existing BUKO configuration file that will be updated"
+            )
+        
+        # Process button
+        if st.button("🔄 Process Error Message", type="primary"):
+            if not error_message.strip():
+                st.error("❌ Please enter an error message")
+                return
+            
+            if not uploaded_file:
+                st.error("❌ Please upload the BUKO file")
+                return
+            
+            try:
+                # Load existing BUKO file
+                existing_lines = load_buko_file(uploaded_file)
+                st.success(f"✅ Loaded BUKO file with {len(existing_lines)} existing entries")
                 
-                if not st.checkbox("Proceed anyway (add duplicate entry)"):
+                # Parse error message
+                with st.spinner("Parsing error message..."):
+                    fields = parse_error_message(error_message)
+                
+                # Validate field lengths
+                validation_errors = validate_field_lengths(fields)
+                if validation_errors:
+                    st.error("❌ Validation Errors:")
+                    for error in validation_errors:
+                        st.error(f"• {error}")
                     return
-            
-            # Format output line
-            formatted_line = format_output_line(be_type, bec1, bec2, fields)
-            
-            # Add to BUKO file
-            updated_lines = existing_lines + [formatted_line]
-            new_row_number = len(updated_lines)
-            
-            # Create download file
-            updated_content = '\n'.join(updated_lines)
-            
-            # Store processing results in session state
-            st.session_state.processing_results = {
-                'be_type': be_type,
-                'bec1': bec1,
-                'bec2': bec2,
-                'fields': fields,
-                'formatted_line': formatted_line,
-                'new_row_number': new_row_number,
-                'updated_content': updated_content,
-                'updated_lines': updated_lines,
-                'duplicate_rows': duplicate_rows
-            }
-            
-        except ValueError as e:
-            st.error(f"❌ Error parsing message: {str(e)}")
-        except Exception as e:
-            st.error(f"❌ Unexpected error: {str(e)}")
-    
-    # Display processing results if they exist in session state (only in this tab)
+                
+                # Determine BE_TYPE, BEC1, BEC2
+                be_type, bec1, bec2 = determine_be_fields(
+                    fields['KONTOBEZ_SOLL'], 
+                    fields['KONTOBEZ_HABEN']
+                )
+                
+                # Check for duplicates
+                duplicate_rows = check_duplicates(fields, existing_lines)
+                if duplicate_rows:
+                    st.warning(f"⚠️ Duplicate entries found at row(s): {', '.join(map(str, duplicate_rows))}")
+                    st.warning("The configuration may already exist in the BUKO file.")
+                    
+                    if not st.checkbox("Proceed anyway (add duplicate entry)"):
+                        return
+                
+                # Format output line
+                formatted_line = format_output_line(be_type, bec1, bec2, fields)
+                
+                # Add to BUKO file
+                updated_lines = existing_lines + [formatted_line]
+                new_row_number = len(updated_lines)
+                
+                # Create download file
+                updated_content = '\n'.join(updated_lines)
+                
+                # Store processing results in session state
+                st.session_state.processing_results = {
+                    'be_type': be_type,
+                    'bec1': bec1,
+                    'bec2': bec2,
+                    'fields': fields,
+                    'formatted_line': formatted_line,
+                    'new_row_number': new_row_number,
+                    'updated_content': updated_content,
+                    'updated_lines': updated_lines,
+                    'duplicate_rows': duplicate_rows
+                }
+                
+            except ValueError as e:
+                st.error(f"❌ Error parsing message: {str(e)}")
+            except Exception as e:
+                st.error(f"❌ Unexpected error: {str(e)}")
+        
+        # Display processing results if they exist in session state (only in this tab)
         if 'processing_results' in st.session_state:
             results = st.session_state.processing_results
             
