@@ -668,80 +668,80 @@ def main():
             st.error(f"❌ Unexpected error: {str(e)}")
     
     # Display processing results if they exist in session state (only in this tab)
-    if 'processing_results' in st.session_state:
-        results = st.session_state.processing_results
-        
-        # Display results
-        st.subheader("📊 Processing Results")
-        
-        # Show parsed fields
-        with st.expander("🔍 Parsed Fields", expanded=True):
-            col1, col2, col3 = st.columns(3)
+        if 'processing_results' in st.session_state:
+            results = st.session_state.processing_results
             
-            with col1:
-                st.write("**Determined Values:**")
-                st.write(f"BE_TYPE: `{results['be_type']}`")
-                st.write(f"BEC1: `{results['bec1']}`")
-                st.write(f"BEC2: `{results['bec2']}`")
-                st.write("")
-                st.write("**Core Fields:**")
-                st.write(f"BK: `{results['fields']['BK']}`")
-                st.write(f"KONTOBEZ_SOLL: `{results['fields']['KONTOBEZ_SOLL']}`")
-                st.write(f"KONTOBEZ_HABEN: `{results['fields']['KONTOBEZ_HABEN']}`")
-                st.write(f"BUCHART: `{results['fields']['BUCHART']}`")
-                st.write(f"BETRAGSART: `{results['fields']['BETRAGSART']}`")
+            # Display results
+            st.subheader("📊 Processing Results")
             
-            with col2:
-                st.write("**Additional Core Fields:**")
-                st.write(f"FORDART: `{results['fields']['FORDART']}`")
-                st.write(f"ZAHLART: `{results['fields']['ZAHLART']}`")
-                st.write(f"GG_KONTOBEZ_SOLL: `{results['fields']['GG_KONTOBEZ_SOLL']}`")
-                st.write(f"GG_KONTOBEZ_HABEN: `{results['fields']['GG_KONTOBEZ_HABEN']}`")
-                st.write(f"BBZBETRART: `{results['fields']['BBZBETRART']}`")
-                st.write(f"KZVORRUECK: `{results['fields']['KZVORRUECK']}`")
-                st.write(f"FLREVERSED: `{results['fields']['FLREVERSED']}`")
+            # Show parsed fields
+            with st.expander("🔍 Parsed Fields", expanded=True):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.write("**Determined Values:**")
+                    st.write(f"BE_TYPE: `{results['be_type']}`")
+                    st.write(f"BEC1: `{results['bec1']}`")
+                    st.write(f"BEC2: `{results['bec2']}`")
+                    st.write("")
+                    st.write("**Core Fields:**")
+                    st.write(f"BK: `{results['fields']['BK']}`")
+                    st.write(f"KONTOBEZ_SOLL: `{results['fields']['KONTOBEZ_SOLL']}`")
+                    st.write(f"KONTOBEZ_HABEN: `{results['fields']['KONTOBEZ_HABEN']}`")
+                    st.write(f"BUCHART: `{results['fields']['BUCHART']}`")
+                    st.write(f"BETRAGSART: `{results['fields']['BETRAGSART']}`")
+                
+                with col2:
+                    st.write("**Additional Core Fields:**")
+                    st.write(f"FORDART: `{results['fields']['FORDART']}`")
+                    st.write(f"ZAHLART: `{results['fields']['ZAHLART']}`")
+                    st.write(f"GG_KONTOBEZ_SOLL: `{results['fields']['GG_KONTOBEZ_SOLL']}`")
+                    st.write(f"GG_KONTOBEZ_HABEN: `{results['fields']['GG_KONTOBEZ_HABEN']}`")
+                    st.write(f"BBZBETRART: `{results['fields']['BBZBETRART']}`")
+                    st.write(f"KZVORRUECK: `{results['fields']['KZVORRUECK']}`")
+                    st.write(f"FLREVERSED: `{results['fields']['FLREVERSED']}`")
+                
+                with col3:
+                    st.write("**Other Fields:**")
+                    st.write(f"LART: `{results['fields']['LART']}`")
+                    st.write(f"SOURCE: `{results['fields']['SOURCE']}`")
             
-            with col3:
-                st.write("**Other Fields:**")
-                st.write(f"LART: `{results['fields']['LART']}`")
-                st.write(f"SOURCE: `{results['fields']['SOURCE']}`")
-        
-        # Show formatted output
-        st.subheader("📄 Formatted Output")
-        st.code(results['formatted_line'], language="text")
-        
-        st.success(f"✅ New entry added at row {results['new_row_number']}")
-        
-        # Download button
-        st.download_button(
-            label="📥 Download Updated BUKO File",
-            data=results['updated_content'],
-            file_name="AI_Agent_BUKO_Updated.txt",
-            mime="text/plain",
-            type="primary"
-        )
-        
-        # Show warning message
-        st.warning("""
-        ⚠️ **Important Note:**
-        This may not be the latest version of the BUKO file. Please ensure that you have the most recent version. 
-        You can copy the newly added entry into your latest BUKO file and rerun the GL.
-        """)
-        
-        # Show preview of updated file
-        with st.expander("👀 Preview Updated File (Last 10 entries)"):
-            preview_lines = results['updated_lines'][-10:]
-            for i, line in enumerate(preview_lines, len(results['updated_lines']) - 9):
-                if i == results['new_row_number']:
-                    st.success(f"Row {i}: {line}")
-                else:
-                    st.text(f"Row {i}: {line}")
-        
-        # Clear results button
-        if st.button("🧹 Clear Results & Start New", type="secondary"):
-            del st.session_state.processing_results
-            st.session_state.error_message = ""
-            st.rerun()
+            # Show formatted output
+            st.subheader("📄 Formatted Output")
+            st.code(results['formatted_line'], language="text")
+            
+            st.success(f"✅ New entry added at row {results['new_row_number']}")
+            
+            # Download button
+            st.download_button(
+                label="📥 Download Updated BUKO File",
+                data=results['updated_content'],
+                file_name="AI_Agent_BUKO_Updated.txt",
+                mime="text/plain",
+                type="primary"
+            )
+            
+            # Show warning message
+            st.warning("""
+            ⚠️ **Important Note:**
+            This may not be the latest version of the BUKO file. Please ensure that you have the most recent version. 
+            You can copy the newly added entry into your latest BUKO file and rerun the GL.
+            """)
+            
+            # Show preview of updated file
+            with st.expander("👀 Preview Updated File (Last 10 entries)"):
+                preview_lines = results['updated_lines'][-10:]
+                for i, line in enumerate(preview_lines, len(results['updated_lines']) - 9):
+                    if i == results['new_row_number']:
+                        st.success(f"Row {i}: {line}")
+                    else:
+                        st.text(f"Row {i}: {line}")
+            
+            # Clear results button
+            if st.button("🧹 Clear Results & Start New", type="secondary"):
+                del st.session_state.processing_results
+                st.session_state.error_message = ""
+                st.rerun()
     
     
     
