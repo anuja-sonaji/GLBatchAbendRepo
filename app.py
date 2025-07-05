@@ -667,7 +667,7 @@ def main():
         except Exception as e:
             st.error(f"❌ Unexpected error: {str(e)}")
     
-    # Display processing results if they exist in session state
+    # Display processing results if they exist in session state (only in this tab)
     if 'processing_results' in st.session_state:
         results = st.session_state.processing_results
         
@@ -742,6 +742,8 @@ def main():
             del st.session_state.processing_results
             st.session_state.error_message = ""
             st.rerun()
+    
+    
     
     # Help section
     with st.expander("❓ Help & Format Information"):
