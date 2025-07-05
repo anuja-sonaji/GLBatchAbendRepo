@@ -82,6 +82,97 @@ address = "0.0.0.0"
 port = 5000
 ```
 
+## VS Code Workspace Setup
+
+### Prerequisites for VS Code Setup
+
+- **VS Code**: Download and install from [https://code.visualstudio.com/](https://code.visualstudio.com/)
+- **Python Extension**: Install the Python extension for VS Code
+- **Python 3.11+**: Ensure Python is installed on your system
+
+### Setting up the Workspace in VS Code
+
+1. **Open the Project in VS Code**
+   ```bash
+   # Navigate to project directory
+   cd gl-batch-abend-process
+   
+   # Open in VS Code
+   code .
+   ```
+
+2. **Install Recommended Extensions**
+   - When you open the project, VS Code will suggest installing recommended extensions
+   - Click "Install" when prompted, or manually install:
+     - `ms-python.python` (Python)
+     - `ms-python.vscode-pylance` (Python language server)
+
+3. **Configure Python Interpreter**
+   - Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
+   - Type "Python: Select Interpreter"
+   - Choose your Python 3.11+ interpreter or virtual environment
+
+4. **Verify Configuration Files**
+   The project includes pre-configured VS Code settings:
+   
+   **`.vscode/settings.json`** - Python settings and formatting
+   **`.vscode/launch.json`** - Debug configuration for Streamlit
+   **`.vscode/tasks.json`** - Task runner configuration (if created)
+
+5. **Install Python Dependencies**
+   ```bash
+   # In VS Code terminal (Terminal → New Terminal)
+   pip install streamlit pandas
+   ```
+
+### Running the Application in VS Code
+
+#### Method 1: Using the Debug Configuration
+1. Press `F5` or go to `Run → Start Debugging`
+2. Select "Run Streamlit App" configuration
+3. The application will start on port 5000
+
+#### Method 2: Using VS Code Terminal
+1. Open terminal in VS Code (`Terminal → New Terminal`)
+2. Run the command:
+   ```bash
+   streamlit run app.py --server.port 5000
+   ```
+
+#### Method 3: Using Tasks (if configured)
+1. Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
+2. Type "Tasks: Run Task"
+3. Select "Run Streamlit App" if available
+
+### VS Code Features for This Project
+
+- **Syntax Highlighting**: Automatic Python syntax highlighting
+- **IntelliSense**: Code completion and suggestions
+- **Debugging**: Set breakpoints and debug your code
+- **Integrated Terminal**: Run commands without leaving the editor
+- **Git Integration**: Built-in version control
+- **File Explorer**: Easy navigation through project files
+
+### Troubleshooting VS Code Setup
+
+1. **Python not found**:
+   - Ensure Python is installed and in your PATH
+   - Restart VS Code after Python installation
+
+2. **Extensions not working**:
+   - Reload VS Code window: `Ctrl+Shift+P` → "Developer: Reload Window"
+   - Check that Python extension is enabled
+
+3. **Streamlit command not found**:
+   - Verify Streamlit is installed: `pip list | grep streamlit`
+   - Reinstall if needed: `pip install streamlit`
+
+4. **Port already in use**:
+   ```bash
+   # Use a different port
+   streamlit run app.py --server.port 8501
+   ```
+
 ## Running the Application
 
 ### Method 1: Using Terminal in VS Code
