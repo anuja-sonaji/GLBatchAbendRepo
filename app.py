@@ -379,20 +379,20 @@ def main():
                     col4, col5, col6 = st.columns([1, 1, 2])
                     
                     with col4:
-                        # Filter by KONTOBEZ_SOLL
-                        kontobez_soll_values = sorted(set(config['KONTOBEZ_SOLL'] for config in configurations if config['KONTOBEZ_SOLL'].strip()))
-                        selected_kontobez_soll = st.selectbox(
-                            "Filter by KONTOBEZ_SOLL:",
-                            options=["All"] + kontobez_soll_values,
+                        # Filter by BUCHART
+                        buchart_values = sorted(set(config['BUCHART'] for config in configurations if config['BUCHART'].strip()))
+                        selected_buchart = st.selectbox(
+                            "Filter by BUCHART:",
+                            options=["All"] + buchart_values,
                             index=0
                         )
                     
                     with col5:
-                        # Filter by KONTOBEZ_HABEN
-                        kontobez_haben_values = sorted(set(config['KONTOBEZ_HABEN'] for config in configurations if config['KONTOBEZ_HABEN'].strip()))
-                        selected_kontobez_haben = st.selectbox(
-                            "Filter by KONTOBEZ_HABEN:",
-                            options=["All"] + kontobez_haben_values,
+                        # Filter by BETRAGSART
+                        betragsart_values = sorted(set(config['BETRAGSART'] for config in configurations if config['BETRAGSART'].strip()))
+                        selected_betragsart = st.selectbox(
+                            "Filter by BETRAGSART:",
+                            options=["All"] + betragsart_values,
                             index=0
                         )
                     
@@ -407,7 +407,7 @@ def main():
                             apply_filters = st.button("Apply Filters", type="primary")
                     
                     # Apply search and filters
-                    if search_term or show_all or apply_filters or selected_be_type != "All" or selected_source != "All" or selected_kontobez_soll != "All" or selected_kontobez_haben != "All":
+                    if search_term or show_all or apply_filters or selected_be_type != "All" or selected_source != "All" or selected_buchart != "All" or selected_betragsart != "All":
                         if clear_filters:
                             # Reset session state for filters
                             if 'filter_reset' not in st.session_state:
@@ -429,13 +429,13 @@ def main():
                         if selected_source != "All":
                             filtered_configs = [config for config in filtered_configs if config['SOURCE'] == selected_source]
                         
-                        # Apply KONTOBEZ_SOLL filter
-                        if selected_kontobez_soll != "All":
-                            filtered_configs = [config for config in filtered_configs if config['KONTOBEZ_SOLL'] == selected_kontobez_soll]
+                        # Apply BUCHART filter
+                        if selected_buchart != "All":
+                            filtered_configs = [config for config in filtered_configs if config['BUCHART'] == selected_buchart]
                         
-                        # Apply KONTOBEZ_HABEN filter
-                        if selected_kontobez_haben != "All":
-                            filtered_configs = [config for config in filtered_configs if config['KONTOBEZ_HABEN'] == selected_kontobez_haben]
+                        # Apply BETRAGSART filter
+                        if selected_betragsart != "All":
+                            filtered_configs = [config for config in filtered_configs if config['BETRAGSART'] == selected_betragsart]
                         
                         if filtered_configs:
                             # Display results count and export options
